@@ -40,6 +40,23 @@ export function isSafe(report: number[]): boolean {
   return adjacent && continuous;
 }
 
+// si le report n'est pas safe, alors le passer au problem dampener
+// tester tous les subset du report et si au moins un subset est safe, alors safe
+export function problemDampener(report: number[]): boolean {
+  let safe = false;
+  for (let i = 0; i < report.length; i++) {
+    const subset = report.toSpliced(i, 1);
+    if (isSafe(subset)) {
+      safe = true;
+    }
+  }
+  return safe;
+}
+
+export function assessReport(report: number[]): boolean {
+  return isSafe(report) || problemDampener(report);
+}
+
 export const example = `7 6 4 2 1
 1 2 7 8 9
 9 7 6 2 1
@@ -51,7 +68,7 @@ const input = await Deno.readTextFile("input.txt");
 
 const reports = parseReports(input);
 
-const analysis = reports.map(isSafe);
+const analysis = reports.map(assessReport);
 console.log(analysis);
 
 const result = analysis.reduce((acc, isSafe) => acc + (isSafe ? 1 : 0), 0);
