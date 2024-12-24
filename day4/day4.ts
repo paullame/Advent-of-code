@@ -1,6 +1,4 @@
-import { assertEquals } from "jsr:@std/assert";
-
-const TEXT_WIDTH = 10; // to account for the line return
+const TEXT_WIDTH = 140; // to account for the line return
 const pattern = /XMAS/g;
 const reverse_pattern = /SAMX/g;
 const example = `MMMSXXMASM
@@ -13,6 +11,10 @@ SMSMSASXSS
 SAXAMASAAA
 MAMMMXMMMM
 MXMXAXMASX`;
+
+// horizontal : 5
+// vertical: 3
+// diagonal :
 
 const expectedResult = `....XXMAS.
 .SAMXMS...
@@ -30,8 +32,8 @@ const expectedAnswer = 18;
 function findPattern(input: string): number {
   const matches = input.match(pattern);
   const reverse_matches = input.match(reverse_pattern);
-  console.log("matches", matches);
-  console.log("reverse_matches", reverse_matches);
+  //console.log("matches", matches);
+  //console.log("reverse_matches", reverse_matches);
   const a = matches?.length || 0;
   const b = reverse_matches?.length || 0;
   return a + b;
@@ -52,40 +54,63 @@ function getColumns(input: string): string[][] {
 
 // ensuite je match le pattern XMAS pour chaque colonne et j'additione les résultats
 function findVerticalWords(input: string): number {
-  const columns = getColumns(input);
-  const text = columns.reduce((acc, column) => acc + column.join(""), "");
-  return findPattern(text);
+  let total = 0;
+  const charColumns = getColumns(input);
+  const columns = charColumns.map((column) => column.join(""));
+  for (const column of columns) {
+    total += findPattern(column);
+  }
+  return total;
 }
 
 //TODO
 function getdiagonals(input: string): string[][] {
-  const columns: string[][] = [];
+  const diagonals: string[][] = [];
   const lines = input.split("\n");
-  for (let i = 0; i < TEXT_WIDTH; i++) {
-    const column: string[] = [];
-    for (let j = 0; j < lines.length; j++) {
-      column.push(lines[j][j]);
+  const size = lines.length;
+
+  for (let k = 0; k < size * 2 - 1; k++) {
+    const diagonal: string[] = [];
+    for (let y = 0; y <= k; y++) {
+      const x = k - y;
+      if (x < size && y < size) {
+        diagonal.push(lines[y][x]);
+      }
     }
-    columns.push(column);
+    diagonals.push(diagonal);
   }
-  console.log(columns);
-  return columns;
+
+  // Collect diagonals from top-right to bottom-left
+  for (let k = 0; k < size * 2 - 1; k++) {
+    const diagonal: string[] = [];
+    for (let y = 0; y <= k; y++) {
+      const x = size - 1 - k + y;
+      if (x >= 0 && x < size && y < size) {
+        diagonal.push(lines[y][x]);
+      }
+    }
+    diagonals.push(diagonal);
+  }
+  //console.log("diagonals", diagonals);
+  return diagonals;
 }
 
 function findDiagonalWords(input: string): number {
-  const diagonals = getdiagonals(input);
-  const text = diagonals.reduce((acc, diagonal) => acc + diagonal.join(""), "");
-  return findPattern(text);
+  let total = 0;
+  const charDiagonals = getdiagonals(input);
+  const diagonals = charDiagonals.map((diagonal) => diagonal.join(""));
+  for (const diagonal of diagonals) {
+    total += findPattern(diagonal);
+  }
+  return total;
 }
 
-function countWords(): number {
-  return 18;
+function getTotal(input: string): number {
+  return findPattern(input) + findVerticalWords(input) +
+    findDiagonalWords(input);
 }
 
-const total = findPattern(example) + findVerticalWords(example) +
-  findDiagonalWords(example);
+const input = await Deno.readTextFile("input.txt");
+
+const total = getTotal(input);
 console.log("total", total);
-
-Deno.test("", () => {
-  assertEquals(1, 1);
-});
