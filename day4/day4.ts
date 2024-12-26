@@ -27,6 +27,17 @@ S.S.S.S.SS
 ..M.M.M.MM
 .X.X.XMASX`;
 
+const expectedResult2 = `.M.S......
+..A..MSMS.
+.M.S.MAA..
+..A.ASMSM.
+.M.S.M....
+..........
+S.S.S.S.S.
+.A.A.A.A..
+M.M.M.M.M.
+..........`;
+
 const expectedAnswer = 18;
 
 function findPattern(input: string): number {
@@ -105,12 +116,79 @@ function findDiagonalWords(input: string): number {
   return total;
 }
 
+//----------PART 2----------------
+
+interface Cross {
+  LRdiag: string;
+  RLdiag: string;
+}
+
+function toCharTable(input: string): string[][] {
+  const lines = input.split("\n");
+  const charTable: string[][] = [];
+  lines.forEach((line) => {
+    const chars = line.split("");
+    charTable.push(chars);
+  });
+  return charTable;
+}
+
+function getCenterLocation(charTable: string[][]): number[][] {
+  const centerPositions: number[][] = [];
+  for (let i = 1; i < charTable.length - 1; i++) {
+    for (let j = 1; j < charTable[i].length - 1; j++) {
+      if (charTable[i][j] === "A") {
+        centerPositions.push([i, j]);
+      }
+    }
+  }
+  return centerPositions;
+}
+
+function toCrosses(
+  centerLocations: number[][],
+  crossword: string[][],
+): Cross[] {
+  const crosses = [];
+  for (const [i, j] of centerLocations) {
+    const leftRightDiag = crossword[i - 1][j - 1] + "A" +
+      crossword[i + 1][j + 1];
+    const rightLeftDiag = crossword[i - 1][j + 1] + "A" +
+      crossword[i + 1][j - 1];
+    crosses.push({
+      LRdiag: leftRightDiag,
+      RLdiag: rightLeftDiag,
+    });
+  }
+  return crosses;
+}
+
+function isValidCross(cross: Cross): boolean {
+  return (cross.LRdiag === "MAS" ||
+    cross.LRdiag === "SAM") && (cross.RLdiag === "MAS" ||
+      cross.RLdiag === "SAM");
+}
+
 function getTotal(input: string): number {
   return findPattern(input) + findVerticalWords(input) +
     findDiagonalWords(input);
 }
 
 const input = await Deno.readTextFile("input.txt");
+const crossword = toCharTable(input);
+console.log("crossword", crossword);
 
-const total = getTotal(input);
-console.log("total", total);
+const centerPositions = getCenterLocation(crossword);
+console.log("centerPositions", centerPositions);
+
+const crosses = toCrosses(centerPositions, crossword);
+console.log("crosses", crosses);
+
+const validCrosses = crosses.filter((cross) => isValidCross(cross));
+console.log("validCrosses", validCrosses);
+
+const result = validCrosses.length;
+console.log(result);
+
+/* const total = getTotal(input);
+console.log("total", total); */
